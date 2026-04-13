@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package notification.v1;
+
+option go_package = "notification_service/internal/grpc/notificationpb;notificationpb";
+
+service NotificationService {
+  rpc SendMessageNotification(SendMessageNotificationRequest) returns (SendMessageNotificationResponse);
+}
+
+message SendMessageNotificationRequest {
+  uint64 message_id = 1;
+  uint64 chat_id = 2;
+  uint64 sender_id = 3;
+  string sender_username = 4;
+  string content = 5;
+  repeated uint64 recipient_ids = 6;
+  int64 created_at_unix_ms = 7;
+}
+
+message SendMessageNotificationResponse {
+  bool accepted = 1;
+}
