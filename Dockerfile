@@ -17,4 +17,5 @@ RUN chmod +x notification-service
 
 ENTRYPOINT ["./notification-service"]
 
+EXPOSE 8080
 EXPOSE 9090

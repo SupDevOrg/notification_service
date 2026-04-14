@@ -4,19 +4,30 @@ import "os"
 
 type Config struct {
 	GRPCPort string
+	HTTPPort string
 }
 
 func Load() Config {
-	port := os.Getenv("GRPC_PORT")
-	if port == "" {
-		port = "9090"
+	grpcPort := os.Getenv("GRPC_PORT")
+	if grpcPort == "" {
+		grpcPort = "9090"
+	}
+
+	httpPort := os.Getenv("HTTP_PORT")
+	if httpPort == "" {
+		httpPort = "8080"
 	}
 
 	return Config{
-		GRPCPort: port,
+		GRPCPort: grpcPort,
+		HTTPPort: httpPort,
 	}
 }
 
 func (c Config) GRPCAddress() string {
 	return ":" + c.GRPCPort
+}
+
+func (c Config) HTTPAddress() string {
+	return ":" + c.HTTPPort
 }

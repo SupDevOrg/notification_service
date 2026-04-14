@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"notification_service/internal/grpc/notificationpb"
+	"notification_service/internal/websocket"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -12,10 +13,11 @@ import (
 
 type NotificationServer struct {
 	notificationpb.UnimplementedNotificationServiceServer
+	hub *websocket.Hub
 }
 
-func NewNotificationServer() *NotificationServer {
-	return &NotificationServer{}
+func NewNotificationServer(hub *websocket.Hub) *NotificationServer {
+	return &NotificationServer{hub: hub}
 }
 
 func (s *NotificationServer) SendMessageNotification(
@@ -24,6 +26,9 @@ func (s *NotificationServer) SendMessageNotification(
 ) (*notificationpb.SendMessageNotificationResponse, error) {
 	_ = ctx
 
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "request is required")
+	}
 	if req.GetMessageId() == 0 {
 		return nil, status.Error(codes.InvalidArgument, "message_id is required")
 	}
@@ -47,6 +52,13 @@ func (s *NotificationServer) SendMessageNotification(
 		req.GetContent(),
 		req.GetCreatedAtUnixMs(),
 	)
+
+	if s.hub != nil {
+		if err := s.hub.BroadcastMessageNotification(req); err != nil {
+			log.Printf("failed to broadcast notification: %v", err)
+			return nil, status.Error(codes.Internal, "failed to broadcast notification")
+		}
+	}
 
 	return &notificationpb.SendMessageNotificationResponse{
 		Accepted: true,
