@@ -3,7 +3,8 @@ package service
 import (
 	"context"
 	"log"
-
+	"time"
+	
 	"notification_service/internal/grpc/notificationpb"
 	"notification_service/internal/websocket"
 
@@ -24,7 +25,8 @@ func (s *NotificationServer) SendMessageNotification(
 	ctx context.Context,
 	req *notificationpb.SendMessageNotificationRequest,
 ) (*notificationpb.SendMessageNotificationResponse, error) {
-	_ = ctx
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
 
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "request is required")
@@ -54,7 +56,7 @@ func (s *NotificationServer) SendMessageNotification(
 	)
 
 	if s.hub != nil {
-		if err := s.hub.BroadcastMessageNotification(req); err != nil {
+		if err := s.hub.BroadcastMessageNotification(ctx, req); err != nil {
 			log.Printf("failed to broadcast notification: %v", err)
 			return nil, status.Error(codes.Internal, "failed to broadcast notification")
 		}

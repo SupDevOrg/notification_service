@@ -3,7 +3,8 @@ package websocket
 import (
 	"encoding/json"
 	"log"
-
+	"context"
+	"fmt"
 	"notification_service/internal/grpc/notificationpb"
 )
 
@@ -33,7 +34,7 @@ type Hub struct {
 func NewHub() *Hub {
 	return &Hub{
 		Clients:    make(map[uint64]map[*Client]struct{}),
-		Broadcast:  make(chan *Message),
+		Broadcast:  make(chan *Message, 100),  
 		Register:   make(chan *Client),
 		Unregister: make(chan *Client),
 	}
@@ -78,7 +79,7 @@ func (h *Hub) Run() {
 	}
 }
 
-func (h *Hub) BroadcastMessageNotification(req *notificationpb.SendMessageNotificationRequest) error {
+func (h *Hub) BroadcastMessageNotification(ctx context.Context, req *notificationpb.SendMessageNotificationRequest) error {
 	payload, err := json.Marshal(MessageNotification{
 		Type:            "message_notification",
 		MessageID:       req.GetMessageId(),
@@ -92,11 +93,14 @@ func (h *Hub) BroadcastMessageNotification(req *notificationpb.SendMessageNotifi
 	if err != nil {
 		return err
 	}
-
-	h.Broadcast <- &Message{
-		RecipientIDs: append([]uint64(nil), req.GetRecipientIds()...),
-		Content:      payload,
-	}
-
-	return nil
+	msg := &Message{
+			RecipientIDs: append([]uint64(nil), req.GetRecipientIds()...),
+			Content: payload,
+		}
+		select {
+		case h.Broadcast <- msg:
+			return nil
+		case <-ctx.Done():
+			return fmt.Errorf("broadcast timed out: %w", ctx.Err())
+		}
 }
