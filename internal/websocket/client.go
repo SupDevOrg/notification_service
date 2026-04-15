@@ -23,11 +23,14 @@ func (c *Client) Read() {
 }
 
 func (c *Client) Write() {
-	defer c.Socket.Close()
+	defer func() {
+        c.Hub.Unregister <- c
+        c.Socket.Close()
+    }()
 
 	for msg := range c.Send {
 		if err := c.Socket.WriteMessage(websocket.TextMessage, msg); err != nil {
-			break
+			return
 		}
 	}
 }
