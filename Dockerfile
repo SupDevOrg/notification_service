@@ -1,28 +1,21 @@
-FROM eclipse-temurin:21-jdk AS builder
-
+FROM golang:1.25-alpine AS builder
 WORKDIR /app
 
-# Копируем файлы для сборки проекта
-COPY gradle/ gradle/
-COPY build.gradle.kts settings.gradle.kts gradlew ./
-COPY src/ src/
+COPY go.mod go.sum ./
+RUN go mod download
 
-# Предоставляем права на выполнение gradlew
-RUN chmod +x ./gradlew
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o notification-service ./cmd
 
-# Собираем проект
-RUN ./gradlew build -x test
-
-# Создаем основной образ
-FROM eclipse-temurin:21-jre
-
+FROM alpine:latest
 WORKDIR /app
 
-# Копируем собранный JAR из образа builder
-COPY --from=builder /app/build/libs/*.jar app.jar
+RUN apk --no-cache add ca-certificates
 
-# Указываем порт, на котором будет работать приложение
+COPY --from=builder /app/notification-service .
+RUN chmod +x notification-service
+
+ENTRYPOINT ["./notification-service"]
+
 EXPOSE 8080
-
-# Команда запуска приложения
-ENTRYPOINT ["java", "-jar", "app.jar"]
+EXPOSE 9090
