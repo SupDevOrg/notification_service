@@ -13,6 +13,7 @@ import (
 
 	"notification_service/internal/config"
 	"notification_service/internal/grpc/notificationpb"
+	"notification_service/internal/grpc/usernotificationpb"
 	"notification_service/internal/handlers"
 	"notification_service/internal/service"
 	"notification_service/internal/websocket"
@@ -35,6 +36,7 @@ func main() {
 
 	grpcServer := grpc.NewServer()
 	notificationpb.RegisterNotificationServiceServer(grpcServer, service.NewNotificationServer(hub))
+	usernotificationpb.RegisterNotificationServiceServer(grpcServer, service.NewUserNotificationServer(hub))
 
 	healthServer := health.NewServer()
 	healthServer.SetServingStatus("", healthpb.HealthCheckResponse_SERVING)

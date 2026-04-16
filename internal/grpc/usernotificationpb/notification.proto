@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package notification;
+
+option go_package = "notification_service/internal/grpc/usernotificationpb;usernotificationpb";
+
+enum NotificationType {
+  NOTIFICATION_TYPE_UNSPECIFIED = 0;
+  FRIEND_REQUEST_RECEIVED = 1;
+  FRIEND_REQUEST_ACCEPTED = 2;
+  FRIEND_REQUEST_REJECTED = 3;
+}
+
+message SendNotificationRequest {
+  int64 recipient_id = 1;
+  int64 sender_id = 2;
+  NotificationType type = 3;
+  map<string, string> payload = 4;
+}
+
+message SendNotificationResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+service NotificationService {
+  rpc SendNotification(SendNotificationRequest) returns (SendNotificationResponse);
+}
