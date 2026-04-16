@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 	"log"
-
+	"time" 
 	"notification_service/internal/grpc/usernotificationpb"
 	"notification_service/internal/websocket"
 
@@ -24,6 +24,8 @@ func (s *UserNotificationServer) SendNotification(
 	ctx context.Context,
 	req *usernotificationpb.SendNotificationRequest,
 ) (*usernotificationpb.SendNotificationResponse, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "request is required")
 	}
