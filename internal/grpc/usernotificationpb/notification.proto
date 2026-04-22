@@ -16,6 +16,7 @@ message SendNotificationRequest {
   int64 sender_id = 2;
   NotificationType type = 3;
   map<string, string> payload = 4;
+  int64 created_at_unix_ms = 5;
 }
 
 message SendNotificationResponse {

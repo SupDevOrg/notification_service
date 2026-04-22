@@ -32,6 +32,7 @@ type UserNotification struct {
 	RecipientID      uint64            `json:"recipient_id"`
 	SenderID         uint64            `json:"sender_id"`
 	Payload          map[string]string `json:"payload,omitempty"`
+	CreatedAtUnixMs  int64             `json:"created_at_unix_ms"`
 }
 
 type Hub struct {
@@ -117,11 +118,12 @@ func (h *Hub) BroadcastUserNotification(ctx context.Context, req *usernotificati
 		RecipientID:      uint64(req.GetRecipientId()),
 		SenderID:         uint64(req.GetSenderId()),
 		Payload:          copyPayload(req.GetPayload()),
+		CreatedAtUnixMs:  req.GetCreatedAtUnixMs(),
 	})
 	if err != nil {
 		return err
 	}
-
+	
 	return h.enqueueBroadcast(ctx, &Message{
 		RecipientIDs: []uint64{uint64(req.GetRecipientId())},
 		Content:      payload,
