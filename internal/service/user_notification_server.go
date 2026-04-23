@@ -40,12 +40,13 @@ func (s *UserNotificationServer) SendNotification(
 	}
 
 	log.Printf(
-		"user notification received: type=%s recipient_id=%d sender_id=%d payload=%v",
+		"user notification received: type=%s recipient_id=%d sender_id=%d payload=%v created_at_unix_ms=%d",
 		req.GetType().String(),
 		req.GetRecipientId(),
 		req.GetSenderId(),
 		req.GetPayload(),
-	)
+		req.GetCreatedAtUnixMs(),
+)
 
 	if s.hub != nil {
 		if err := s.hub.BroadcastUserNotification(ctx, req); err != nil {
